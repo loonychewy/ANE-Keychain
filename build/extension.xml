@@ -9,6 +9,13 @@
 				<finalizer>KeychainExtensionFinalizer</finalizer>
 			</applicationDeployment>
 		</platform>
+		<platform name="iPhone-x86">
+			<applicationDeployment>
+				<nativeLibrary>libKeychainIosExtension.a</nativeLibrary>
+				<initializer>KeychainExtensionInitializer</initializer>
+				<finalizer>KeychainExtensionFinalizer</finalizer>
+			</applicationDeployment>
+		</platform>
 		<platform name="default">
 			<applicationDeployment/>
 		</platform>

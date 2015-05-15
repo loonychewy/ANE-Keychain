@@ -3,7 +3,7 @@
 	
 	<property file="build.config"/>
 		
-	<target name="all" depends="ios,swc,default,package" description="Full build of extension"/>
+	<target name="all" depends="ios,ios-simulator,swc,default,package" description="Full build of extension"/>
 	
 	<target name="ios" description="Build iOS Library">
 		<mkdir dir="../temp/ios/build/"/>
@@ -19,7 +19,24 @@
 		
 		<delete dir="../temp/ios/build/"/>
 	</target>
+	
+	<target name="ios-simulator" description="Build iOS Simulator Library">
+		<mkdir dir="../temp/ios-simulator/build/"/>
+
+		<exec executable="xcodebuild" failonerror="true" dir="../ios/${name}IosExtension">
+			<arg line='-project ${name}IosExtension.xcodeproj'/>
+			<arg line='-target ${name}IosExtension'/>
+			<arg line='-configuration Release'/>
+            <arg line="-arch i386"/>
+            <arg line="-sdk iphonesimulator"/>
+			<arg line='SYMROOT=../../temp/ios-simulator/build/'/>
+		</exec>
 		
+		<copy file="../temp/ios-simulator/build/Release-iphoneos/lib${name}IosExtension.a" todir="../temp/ios-simulator" overwrite="true"/>
+		
+		<delete dir="../temp/ios-simulator/build/"/>
+	</target>
+	
 	<target name="swc" description="Build swc library">
 		<mkdir dir="../temp/swc/content/"/>
 		
@@ -31,7 +48,7 @@
 			<regexpmapper from=".*src.(.*)\.as" to="\1"/>
 		</pathconvert>
 		
-		<exec executable="${sdk.home}/bin/compc" failonerror="true">
+		<exec executable="${sdk.home}/bin/compc${bin.ext}" failonerror="true">
 			<arg line='-source-path ../actionscript/src'/>
 			<arg line='-output ../temp/swc/${name}.swc'/>
 			<arg line='-swf-version=13'/>
@@ -41,6 +58,7 @@
 
 		<unzip src="../temp/swc/${name}.swc" dest="../temp/swc/content" overwrite="true"/>
 		<copy file="../temp/swc/content/library.swf" todir="../temp/ios" overwrite="true"/>
+		<copy file="../temp/swc/content/library.swf" todir="../temp/ios-simulator" overwrite="true"/>
 		<delete dir="../temp/swc/content/"/>
 	</target>
 	
@@ -55,7 +73,7 @@
 			<regexpmapper from=".*src.(.*)\.as" to="\1"/>
 		</pathconvert>
 		
-		<exec executable="${sdk.home}/bin/compc" failonerror="true">
+		<exec executable="${sdk.home}/bin/compc${bin.ext}" failonerror="true">
 			<arg line='-source-path ../default/src'/>
 			<arg line='-output ../temp/default/${name}.swc'/>
 			<arg line='-swf-version=13'/>
@@ -69,20 +87,15 @@
 	</target>
 	
 	<target name="package" description="Create the extension package">
-		<exec executable="${sdk.home}/bin/adt" failonerror="true" dir="../temp">
+		<exec executable="${sdk.home}/bin/adt${bin.ext}" failonerror="true" dir="../temp">
 			<arg value="-package"/>
-			<arg value="-storetype"/>
-			<arg value="pkcs12"/>
-			<arg value="-keystore"/>
-			<arg value="${keystore.file}"/>
-			<arg value="-storepass"/>
-			<arg value="${keystore.password}"/>
 			<arg value="-target"/>
 			<arg value="ane"/>
 			<arg value="${name}.ane"/>
 			<arg value="../build/extension.xml"/>
 			<arg line="-swc swc/${name}.swc"/>
 			<arg line="-platform iPhone-ARM -platformoptions ../build/platform.xml -C ios/ ."/>
+			<arg line="-platform iPhone-x86 -platformoptions ../build/platform.xml -C ios-simulator/ ."/>
 			<arg line="-platform default -C default/ ."/>
 		</exec>
 		
